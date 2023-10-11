@@ -147,7 +147,7 @@ def run_dash_app():
                                 family='Roboto'
                             )
                             )
-          fig.update_yaxes(title_text="Hours", tickvals=np.arange(len(conversion_y_labels)), ticktext=traffic_y_labels)
+          fig.update_yaxes(title_text="Hours", tickvals=np.arange(len(conversion_y_labels)), ticktext=sorted(traffic_y_labels))
           fig.update_xaxes(title_text="Days",
                           tickvals=heatmap_data.columns.map(day_dict),
                           ticktext=heatmap_data.columns.map(day_dict))
