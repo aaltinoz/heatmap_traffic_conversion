@@ -113,7 +113,7 @@ def run_dash_app():
               z=heatmap_data.values,
               x=heatmap_data.columns.map(day_dict),
               y=heatmap_data.index.tolist(),
-              colorscale='RdBu'
+              colorscale='Purples'
           ))
           fig.update_layout(title=f'{STORE_NAME} {selected_metric} Heatmap ',
                             xaxis_title='Date',
