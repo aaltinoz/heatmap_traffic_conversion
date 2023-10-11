@@ -107,7 +107,7 @@ def run_dash_app():
     # function for upgrading table
     def update_figure(selected_metric):
         if selected_metric in ['Sales', 'Orders', 'Order Items']:
-          heatmap_data = conversion[conversion[selected_metric] > 0].pivot_table(index='hour', columns='day', values=selected_metric, aggfunc='mean').fillna(0).divide(conversion_day_counts.values())
+          heatmap_data = conversion.pivot_table(index='hour', columns='day', values=selected_metric, aggfunc='mean').fillna(0).divide(conversion_day_counts.values())
 
           fig = go.Figure(data=go.Heatmap(
               z=heatmap_data.values,
@@ -130,7 +130,7 @@ def run_dash_app():
                           ticktext=heatmap_data.columns.map(day_dict))
           return fig
         else:
-          heatmap_data = traffic[traffic[selected_metric] > 0].pivot_table(index='hour', columns='day', values=selected_metric, aggfunc='mean').fillna(0).divide(traffic_day_counts.values())
+          heatmap_data = traffic.pivot_table(index='hour', columns='day', values=selected_metric, aggfunc='mean').fillna(0).divide(traffic_day_counts.values())
 
           fig = go.Figure(data=go.Heatmap(
               z=heatmap_data.values,
