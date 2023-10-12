@@ -24,7 +24,7 @@ def run_dash_app():
     filename = list(uploaded.keys())[0]
     conversion = pd.read_csv(filename)
 
-    print("Please upload Conversion data as a csv file")
+    print("Please upload Traffic data as a csv file")
     uploaded = files.upload()
 
     for fn in uploaded.keys():
