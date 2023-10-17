@@ -138,4 +138,3 @@ def run_dash_app():
 
     app.run(jupyter_mode='external')
 
-run_dash_app()
