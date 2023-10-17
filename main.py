@@ -21,9 +21,10 @@ def run_dash_app():
         print('User uploaded file "{name}" with length {length} bytes'.format(name=fn, length=len(uploaded[fn])))
 
     #Get data
-    filename = list(uploaded.keys())[0]
+    filename = list(uploaded.keys())[0] 
     conversion = pd.read_csv(filename)
 
+      
     print("Please upload Traffic data as a csv file")
     uploaded = files.upload()
 
@@ -40,7 +41,7 @@ def run_dash_app():
     conversion['Orders'] = conversion.iloc[:, 16]
     conversion['Order Items'] = conversion.iloc[:, 22]
     
-    conversion_y_labels = conversion['hour'].unique()
+    
     
     # preprocess for traffic
     traffic.index = pd.to_datetime(traffic['publish_time']).dt.strftime('%m/%d/%Y %H:%M:%S')
@@ -66,36 +67,24 @@ def run_dash_app():
     )
 
     # Function for determining how many weekdays in data
-    def count_weekdays(data_to_use):
-      start_date =  datetime.strptime(data_to_use.index.min(), '%m/%d/%Y %H:%M:%S').date()
-      end_date =  datetime.strptime(data_to_use.index.max(), '%m/%d/%Y %H:%M:%S').date()
+    def count_weekdays(datetime_index):
+        # Define the order of weekdays
+        order_of_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-      day_counts = {
-          'Monday': 0,
-          'Tuesday': 0,
-          'Wednesday': 0,
-          'Thursday': 0,
-          'Friday': 0,
-          'Saturday': 0,
-          'Sunday': 0
-      }
+        # Get the weekday names for each date in the DateTimeIndex
+        weekdays = pd.to_datetime(datetime_index).day_name()
 
-      current_date = start_date
-      while current_date <= end_date:
-          weekday_name = current_date.strftime('%A')
-          day_counts[weekday_name] += 1
-          current_date += timedelta(days=1)
+        # Use value_counts to count the occurrences of each weekday
+        day_counts_unsorted = weekdays.value_counts().to_dict()
 
-      return day_counts
+        # Sort the dictionary based on the order of weekdays and filter out zeros
+        day_counts = {day: day_counts_unsorted.get(day, 0) for day in order_of_days if day_counts_unsorted.get(day, 0) != 0}
+        
+        return day_counts
 
     # Apply function
-    conversion_day_counts = count_weekdays(conversion)
-    traffic_day_counts = count_weekdays(traffic)
-
-
-    # Convert 1,2,3 to Mon Tues Wed
-    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    day_dict = {idx+1: day for idx, day in enumerate(days)}
+    conversion_day_counts = count_weekdays(conversion.index)
+    traffic_day_counts = count_weekdays(traffic.index)
 
 
     # Create Callbacks
@@ -111,8 +100,8 @@ def run_dash_app():
 
           fig = go.Figure(data=go.Heatmap(
               z=heatmap_data.values,
-              x=heatmap_data.columns.map(day_dict),
-              y=heatmap_data.index.tolist(),
+              x=pd.Series(conversion_day_counts.keys()),
+              y=[str(val) for val in heatmap_data.index],
               colorscale='Greens'
           ))
           fig.update_layout(title=f'{STORE_NAME} {selected_metric} Heatmap ',
@@ -124,18 +113,15 @@ def run_dash_app():
                                 family='Roboto'
                             )
                             )
-          fig.update_yaxes(title_text="Hours", tickvals=np.arange(len(conversion_y_labels)), ticktext=sorted(conversion_y_labels))
-          fig.update_xaxes(title_text="Days",
-                          tickvals=heatmap_data.columns.map(day_dict),
-                          ticktext=heatmap_data.columns.map(day_dict))
+
           return fig
         else:
           heatmap_data = traffic.pivot_table(index='hour', columns='day', values=selected_metric, aggfunc='sum').fillna(0).divide(traffic_day_counts.values())
 
           fig = go.Figure(data=go.Heatmap(
               z=heatmap_data.values,
-              x=heatmap_data.columns.map(day_dict),
-              y=heatmap_data.index.tolist(),
+              x=pd.Series(traffic_day_counts.keys()),
+              y=[str(val) for val in heatmap_data.index],
               colorscale='Greens'
           ))
           fig.update_layout(title=f'{STORE_NAME} {selected_metric} Heatmap ',
@@ -147,11 +133,9 @@ def run_dash_app():
                                 family='Roboto'
                             )
                             )
-          fig.update_yaxes(title_text="Hours", tickvals=np.arange(len(conversion_y_labels)), ticktext=sorted(traffic_y_labels))
-          fig.update_xaxes(title_text="Days",
-                          tickvals=heatmap_data.columns.map(day_dict),
-                          ticktext=heatmap_data.columns.map(day_dict))
           return fig
 
 
     app.run(jupyter_mode='external')
+
+run_dash_app()
